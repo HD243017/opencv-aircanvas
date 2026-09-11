@@ -6,7 +6,7 @@ import mediapipe as mp
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 
-PINCH_THRESHOLD = 35
+PINCH_THRESHOLD = 40
 
 hands = mp_hands.Hands(
     max_num_hands=1,                # 감지할 손 개수
@@ -219,7 +219,7 @@ def main():
         elif key in (ord('e'), ord('E')):  # 지우개 모드 토글
             is_eraser = not is_eraser
         elif key in (ord('i'), ord('I')):  # 두께 증가
-            brush_thickness = min(brush_thickness + 2, 30)
+            brush_thickness = min(brush_thickness + 2, 60)
         elif key in (ord('o'), ord('O')):  # 두께 감소
             brush_thickness = max(brush_thickness - 2, 2)
         elif key in (ord('p'), ord('P')):  # 색상 팔레트 열기
