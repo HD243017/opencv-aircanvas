@@ -9,11 +9,12 @@ mp_drawing = mp.solutions.drawing_utils
 PINCH_THRESHOLD = 35
 
 hands = mp_hands.Hands(
-    max_num_hands=1,  # 한 손 추적
-    min_detection_confidence=0.7,
-    min_tracking_confidence=0.7
+    max_num_hands=1,                # 감지할 손 개수
+    min_detection_confidence=0.7,   # 손 탐지 신뢰도 임계값
+    min_tracking_confidence=0.7     # 이전 위치 기반 프레임 별 손 추적 신뢰도 임계값
 )
 
+# createTrackbar의 매개변수에 None이나 비어있으면 오류나서 만듬(빈껍데기)
 def nothing(x):
     pass
 
@@ -52,30 +53,34 @@ def choose_color(current_color):
 
 ## 손 인식
 def detect_hand(frame, model):
-    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    results = model.process(rgb_frame)
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # mediapipe은 RGB 기반
+    results = model.process(rgb_frame)                  # 추론 실행
+
+    # 손 감지
     if results.multi_hand_landmarks:
-        return results.multi_hand_landmarks[0]
+        return results.multi_hand_landmarks[0]          #가장 첫 번째 손만 리턴
     return None
 
 def detect_blue_object(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
-    # 빨간색 HSV 영역
+    # HSV 영역
     lower_blue = np.array([100, 120, 70])
     upper_blue = np.array([130, 255, 255])
     
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
 
     # 노이즈 제거
-    mask = cv2.erode(mask, None, iterations=2)
-    mask = cv2.dilate(mask, None, iterations=2)
+    mask = cv2.erode(mask, None, iterations=2)  # 침식
+    mask = cv2.dilate(mask, None, iterations=2) # 팽창
 
+    # 윤곽선 검출 및 크기 필터링
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if contours:
-        c = max(contours, key=cv2.contourArea)
-        if cv2.contourArea(c) > 500:  # 너무 작은 점은 무시
-            M = cv2.moments(c)
+        c = max(contours, key=cv2.contourArea)  # 가장큰 파랑 찾기
+        if cv2.contourArea(c) > 500:            # 너무 작은 점은 무시
+            #파란 부분에서 중심 부분 찾기
+            M = cv2.moments(c)                  
             if M['m00'] != 0:
                 cx = int(M['m10'] / M['m00'])
                 cy = int(M['m01'] / M['m00'])
@@ -100,7 +105,6 @@ def draw_indicator(frame, thumb_pt, index_pt, mid_pt, is_pinched, color, radius,
         # 대기 상태: 흰색 빈 원
         cv2.circle(frame, mid_pt, ind_radius, (255, 255, 255), 2)
 
-## 2번 과정 (인식한 객체를 통해 화면에 선 그리기)
 def draw_line(canvas, prev_pt, curr_pt, color, thickness):
     if prev_pt is not None:
         cv2.line(canvas, prev_pt, curr_pt, color, thickness)
