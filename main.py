@@ -122,7 +122,7 @@ def merge_canvas(frame, canvas): ## 검은색 바탕의 드로잉을 원본 영�
 def draw_ui(img, color, thickness, is_eraser, track_mode):
     # 상단 UI
     mode_text = "[ERASER]" if is_eraser else "[PEN]"
-    info_text = f"Mode: {mode_text} (E)  |  Size: {thickness} (I/O)  |  Clear: C  |  Color:"
+    info_text = f"Mode: {mode_text} (E)  |  Size: {thickness} (I/O)  |  Clear: C  |  Color: P"
     cv2.putText(img, info_text, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
 
     sample_color = (80, 80, 80) if is_eraser else color
@@ -166,7 +166,7 @@ def main():
         draw_pt = None
         is_drawing = False
 
-        # --- [모드 1] 손 인식 기반 ---
+        # 손 인식 기반
         if track_mode == "HAND":
             landmarks = detect_hand(frame, hands)
             if landmarks:
@@ -183,20 +183,20 @@ def main():
                 # 손가락 인디케이터 그리기
                 draw_indicator(frame, thumb_pt, index_pt, mid_pt, is_drawing, brush_color, brush_thickness, is_eraser)
         
-        # --- [모드 2] 색상 인식 기반 ---
+        # 색상 인식 기반
         elif track_mode == "COLOR":
             blue_pt = detect_blue_object(frame)
             if blue_pt:
                 is_drawing = True
                 draw_pt = blue_pt
                 
-                # 객체 인식 모드일 때는 파란 물체 위에 브러시 모양 표시
+                # 파란 물체 위에 브러시 표시
                 ind_radius = max(brush_thickness // 2, 4)
                 ind_color = (100, 100, 100) if is_eraser else brush_color
                 cv2.circle(frame, blue_pt, ind_radius, ind_color, -1)
                 cv2.circle(frame, blue_pt, ind_radius + 2, (255, 255, 255), 2)
 
-        # --- 공통 그리기 로직 ---
+        # 공통 로직
         if is_drawing and draw_pt:
             draw_color = (0, 0, 0) if is_eraser else brush_color
             draw_line(canvas, prev_pt, draw_pt, draw_color, brush_thickness)
